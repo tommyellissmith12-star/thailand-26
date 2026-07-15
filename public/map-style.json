@@ -1,0 +1,149 @@
+{
+  "version": 8,
+  "name": "Thailand 26 Journal",
+  "glyphs": "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
+  "sources": {
+    "openmaptiles": {
+      "type": "vector",
+      "url": "https://tiles.openfreemap.org/planet"
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": { "background-color": "#f3e9cf" }
+    },
+    {
+      "id": "park",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "park",
+      "paint": { "fill-color": "#cfdcae", "fill-opacity": 0.45 }
+    },
+    {
+      "id": "landcover-wood",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "landcover",
+      "filter": ["==", "class", "wood"],
+      "paint": { "fill-color": "#d5e0b5", "fill-opacity": 0.35 }
+    },
+    {
+      "id": "water",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "water",
+      "paint": { "fill-color": "#7cc7bc" }
+    },
+    {
+      "id": "waterway",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "waterway",
+      "minzoom": 7,
+      "paint": {
+        "line-color": "#7cc7bc",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 7, 0.5, 12, 2]
+      }
+    },
+    {
+      "id": "roads-major",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "transportation",
+      "minzoom": 6,
+      "filter": ["in", "class", "motorway", "trunk", "primary"],
+      "paint": {
+        "line-color": "#e2cda4",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 6, 0.6, 10, 2.2, 14, 5]
+      }
+    },
+    {
+      "id": "boundary-country",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "boundary",
+      "filter": ["all", ["==", "admin_level", 2], ["!=", "maritime", 1]],
+      "paint": {
+        "line-color": "#b3a075",
+        "line-width": 1.2,
+        "line-dasharray": [3, 2]
+      }
+    },
+    {
+      "id": "place-country",
+      "type": "symbol",
+      "source": "openmaptiles",
+      "source-layer": "place",
+      "filter": ["==", "class", "country"],
+      "maxzoom": 7,
+      "layout": {
+        "text-field": ["coalesce", ["get", "name:en"], ["get", "name:latin"], ["get", "name"]],
+        "text-font": ["Noto Sans Bold"],
+        "text-transform": "uppercase",
+        "text-letter-spacing": 0.3,
+        "text-size": ["interpolate", ["linear"], ["zoom"], 4, 11, 6, 14]
+      },
+      "paint": {
+        "text-color": "#a08c5c",
+        "text-halo-color": "#f3e9cf",
+        "text-halo-width": 1.5
+      }
+    },
+    {
+      "id": "place-city",
+      "type": "symbol",
+      "source": "openmaptiles",
+      "source-layer": "place",
+      "filter": ["==", "class", "city"],
+      "minzoom": 5,
+      "layout": {
+        "text-field": ["coalesce", ["get", "name:en"], ["get", "name:latin"], ["get", "name"]],
+        "text-font": ["Noto Sans Bold"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 5, 11, 10, 16]
+      },
+      "paint": {
+        "text-color": "#3c4a3a",
+        "text-halo-color": "#f3e9cf",
+        "text-halo-width": 1.6
+      }
+    },
+    {
+      "id": "place-town",
+      "type": "symbol",
+      "source": "openmaptiles",
+      "source-layer": "place",
+      "filter": ["in", "class", "town", "village"],
+      "minzoom": 8,
+      "layout": {
+        "text-field": ["coalesce", ["get", "name:en"], ["get", "name:latin"], ["get", "name"]],
+        "text-font": ["Noto Sans Regular"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 8, 10, 12, 14]
+      },
+      "paint": {
+        "text-color": "#5c6a54",
+        "text-halo-color": "#f3e9cf",
+        "text-halo-width": 1.4
+      }
+    },
+    {
+      "id": "place-island",
+      "type": "symbol",
+      "source": "openmaptiles",
+      "source-layer": "place",
+      "filter": ["in", "class", "island", "islet"],
+      "minzoom": 8,
+      "layout": {
+        "text-field": ["coalesce", ["get", "name:en"], ["get", "name:latin"], ["get", "name"]],
+        "text-font": ["Noto Sans Italic"],
+        "text-size": 11
+      },
+      "paint": {
+        "text-color": "#31766c",
+        "text-halo-color": "#a9d9d1",
+        "text-halo-width": 1.2
+      }
+    }
+  ]
+}

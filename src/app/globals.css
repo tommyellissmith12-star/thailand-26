@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #faf3e3;
+  --color-paper-deep: #f0e4c9;
+  --color-paper-edge: #e3d3ae;
+  --color-ink: #1c3d36;
+  --color-ink-soft: #52685f;
+  --color-sea: #8ad1c7;
+  --color-sea-deep: #2a9d8f;
+  --color-marigold: #f2a93b;
+  --color-chili: #c74a34;
+  --color-gold: #c9a227;
+  --color-plum: #7e5a9b;
+
+  --font-display: var(--font-fraunces), "Georgia", serif;
+  --font-body: var(--font-karla), "Segoe UI", sans-serif;
+  --font-hand: var(--font-caveat), "Comic Sans MS", cursive;
+
+  --shadow-paper: 0 1px 2px rgba(60, 42, 10, 0.12), 0 6px 18px rgba(60, 42, 10, 0.1);
+  --shadow-lifted: 0 2px 4px rgba(60, 42, 10, 0.16), 0 14px 34px rgba(60, 42, 10, 0.18);
+
+  --animate-stamp: stamp 0.45s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+  --animate-rise: rise 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+  --animate-wobble: wobble 2.4s ease-in-out infinite;
+
+  @keyframes stamp {
+    0% { transform: scale(2.4) rotate(-18deg); opacity: 0; }
+    60% { transform: scale(0.92) rotate(-9deg); opacity: 1; }
+    100% { transform: scale(1) rotate(-11deg); opacity: 1; }
+  }
+  @keyframes rise {
+    from { transform: translateY(14px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes wobble {
+    0%, 100% { transform: rotate(-1.6deg); }
+    50% { transform: rotate(1.6deg); }
+  }
+}
+
+html,
+body {
+  height: 100dvh;
+  overscroll-behavior: none;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  -webkit-tap-highlight-color: transparent;
+  /* Paper grain: two faint dot lattices over the cream base. */
+  background-image:
+    radial-gradient(rgba(112, 84, 40, 0.055) 1px, transparent 1px),
+    radial-gradient(rgba(112, 84, 40, 0.035) 1px, transparent 1px);
+  background-size: 22px 22px, 34px 34px;
+  background-position: 0 0, 11px 17px;
+}
+
+.font-display { font-family: var(--font-display); }
+.font-hand { font-family: var(--font-hand); }
+
+/* Washi tape strip for photo corners */
+.tape {
+  position: absolute;
+  width: 74px;
+  height: 22px;
+  background: color-mix(in srgb, var(--color-marigold) 72%, white);
+  opacity: 0.85;
+  box-shadow: 0 1px 2px rgba(60, 42, 10, 0.18);
+  clip-path: polygon(3% 0, 97% 6%, 100% 94%, 0 100%);
+}
+
+/* Passport stamp badge */
+.stamp {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-chili);
+  border: 3px double var(--color-chili);
+  border-radius: 9999px;
+  transform: rotate(-11deg);
+  opacity: 0.92;
+}
+
+.dashed-route {
+  background-image: linear-gradient(
+    to right,
+    var(--color-ink) 0 6px,
+    transparent 6px 12px
+  );
+  background-size: 12px 2px;
+  background-repeat: repeat-x;
+  background-position: center;
+}
+
+/* MapLibre chrome cleanup */
+.maplibregl-ctrl-attrib {
+  font-size: 9px !important;
+  background: rgba(250, 243, 227, 0.7) !important;
+}
+.maplibregl-canvas {
+  outline: none;
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Hide scrollbars on chip rows without killing scroll */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+input, textarea, select, button { font-family: inherit; }

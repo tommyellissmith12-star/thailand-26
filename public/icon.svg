@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="116" fill="#faf3e3"/>
+  <rect x="24" y="24" width="464" height="464" rx="96" fill="none" stroke="#1c3d36" stroke-width="10" stroke-dasharray="28 18" opacity="0.35"/>
+  <!-- sea -->
+  <path d="M96 340 Q160 310 256 340 T416 340 L416 424 Q256 464 96 424 Z" fill="#8ad1c7"/>
+  <!-- sun -->
+  <circle cx="368" cy="150" r="52" fill="#f2a93b"/>
+  <!-- map pin -->
+  <path d="M256 96 C190 96 142 146 142 212 C142 292 232 372 250 402 C253 407 259 407 262 402 C280 372 370 292 370 212 C370 146 322 96 256 96 Z" fill="#c74a34"/>
+  <circle cx="256" cy="210" r="52" fill="#faf3e3"/>
+  <text x="256" y="238" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="76" fill="#1c3d36">26</text>
+</svg>
