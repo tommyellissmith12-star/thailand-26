@@ -1,13 +1,17 @@
 "use client";
 
 import { useMemo } from "react";
+import Link from "next/link";
+import { UserRound } from "lucide-react";
 import { MEMBERS, memberById, CATEGORIES } from "@/lib/constants";
+import { useMember } from "@/lib/member";
 import { useCommentCounts, usePins } from "@/lib/queries";
 import { publicImageUrl } from "@/lib/supabase";
 import { useUiStore } from "@/lib/ui-store";
 import Avatar from "@/components/ui/Avatar";
 
 export default function BoardPage() {
+  const { member } = useMember();
   const { data: pins = [] } = usePins();
   const { data: commentCounts = {} } = useCommentCounts();
   const selectPin = useUiStore((s) => s.selectPin);
@@ -148,6 +152,14 @@ export default function BoardPage() {
           )}
         </section>
       )}
+
+      <Link
+        href="/enter?who=1"
+        className="mt-10 flex items-center justify-center gap-2 rounded-full border-2 border-ink/15 py-3 font-bold text-ink-soft active:scale-[0.98]"
+      >
+        <UserRound size={17} />
+        Not {member?.name ?? "you"}? Switch traveller
+      </Link>
     </main>
   );
 }

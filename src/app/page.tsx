@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { usePins, useItinerary } from "@/lib/queries";
 import { supabaseConfigured } from "@/lib/supabase";
+import { useMember } from "@/lib/member";
 import type { Category } from "@/lib/constants";
 import CategoryChips from "@/components/pins/CategoryChips";
+import Avatar from "@/components/ui/Avatar";
 
 const ThailandMap = dynamic(() => import("@/components/map/ThailandMap"), {
   ssr: false,
@@ -21,6 +24,7 @@ export default function MapPage() {
   const { data: itinerary = [] } = useItinerary();
   const [activeCategories, setActiveCategories] = useState<Category[] | null>(null);
   const [stampedOnly, setStampedOnly] = useState(false);
+  const { member } = useMember();
 
   return (
     <main className="relative h-dvh w-full overflow-hidden" style={{ touchAction: "none" }}>
@@ -37,14 +41,19 @@ export default function MapPage() {
           <h1 className="font-display text-2xl font-black leading-none drop-shadow-[0_1px_0_rgba(250,243,227,0.9)]">
             THAILAND<span className="align-super text-sm text-chili">&rsquo;26</span>
           </h1>
-          <button
-            onClick={() => setStampedOnly((v) => !v)}
-            className={`pointer-events-auto stamp px-3 py-1 text-[11px] transition-all active:scale-90 ${
-              stampedOnly ? "bg-chili/10 opacity-100" : "bg-paper/80 opacity-60"
-            }`}
-          >
-            The Plan
-          </button>
+          <div className="pointer-events-auto flex items-center gap-2">
+            <button
+              onClick={() => setStampedOnly((v) => !v)}
+              className={`stamp px-3 py-1 text-[11px] transition-all active:scale-90 ${
+                stampedOnly ? "bg-chili/10 opacity-100" : "bg-paper/80 opacity-60"
+              }`}
+            >
+              The Plan
+            </button>
+            <Link href="/enter?who=1" aria-label="Switch traveller" className="active:scale-90">
+              <Avatar memberId={member?.id} size={34} />
+            </Link>
+          </div>
         </div>
         <div className="pointer-events-auto mt-2">
           <CategoryChips value={activeCategories} onChange={setActiveCategories} />

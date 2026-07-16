@@ -10,7 +10,11 @@ const PIN_LENGTH = 4;
 export default function EnterPage() {
   const router = useRouter();
   const { setMember } = useMember();
-  const [stage, setStage] = useState<"pin" | "who">("pin");
+  // /enter?who=1 jumps straight to the member picker (used by "switch user";
+  // the PIN cookie already gates every other page, so this is safe).
+  const [stage, setStage] = useState<"pin" | "who">(() =>
+    typeof window !== "undefined" && window.location.search.includes("who") ? "who" : "pin",
+  );
   const [digits, setDigits] = useState("");
   const [shake, setShake] = useState(false);
   const [checking, setChecking] = useState(false);
