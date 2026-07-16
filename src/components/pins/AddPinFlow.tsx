@@ -1,22 +1,50 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
+import {
+  DndContext,
+  PointerSensor,
+  TouchSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  horizontalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Camera, Link2, Loader2, X } from "lucide-react";
 import { CATEGORIES, CATEGORY_KEYS, THAILAND_CENTER, type Category } from "@/lib/constants";
 import { useMember } from "@/lib/member";
 import { uploadPinImage } from "@/lib/images";
-import { supabase } from "@/lib/supabase";
+import { publicImageUrl, supabase } from "@/lib/supabase";
 import { useUiStore } from "@/lib/ui-store";
-import type { LinkPreview } from "@/lib/types";
+import type { LinkPreview, PinImage } from "@/lib/types";
 
 const LocationPicker = dynamic(() => import("@/components/map/LocationPicker"), { ssr: false });
 
 const STEPS = ["the goods", "the words", "the where"] as const;
+const MAX_PHOTOS = 6;
+
+type PhotoItem =
+  | { key: string; kind: "new"; file: File; url: string }
+  | { key: string; kind: "existing"; image: PinImage };
+
+function itemSrc(item: PhotoItem): string {
+  return item.kind === "new"
+    ? item.url
+    : publicImageUrl(item.image.thumb_path ?? item.image.storage_path);
+}
 
 export default function AddPinFlow() {
   const open = useUiStore((s) => s.addPinOpen);
+  const editPin = useUiStore((s) => s.editPin);
   const close = useUiStore((s) => s.closeAddPin);
   const selectPin = useUiStore((s) => s.selectPin);
   const setFlyTo = useUiStore((s) => s.setFlyTo);
@@ -24,7 +52,7 @@ export default function AddPinFlow() {
   const qc = useQueryClient();
 
   const [step, setStep] = useState(0);
-  const [files, setFiles] = useState<File[]>([]);
+  const [items, setItems] = useState<PhotoItem[]>([]);
   const [linkUrl, setLinkUrl] = useState("");
   const [preview, setPreview] = useState<LinkPreview | null>(null);
   const [fetchingPreview, setFetchingPreview] = useState(false);
@@ -36,16 +64,51 @@ export default function AddPinFlow() {
   const [error, setError] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
-  const objectUrls = useMemo(() => files.map((f) => URL.createObjectURL(f)), [files]);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+  );
+
+  // Prefill everything when opened as an editor
+  useEffect(() => {
+    if (open && editPin) {
+      setTitle(editPin.title);
+      setDescription(editPin.description ?? "");
+      setCategory(editPin.category);
+      setLocation({ lng: editPin.lng, lat: editPin.lat });
+      setItems(
+        [...editPin.pin_images]
+          .sort((a, b) => a.sort_order - b.sort_order)
+          .map((image) => ({ key: image.id, kind: "existing", image })),
+      );
+      const link = editPin.pin_links[0];
+      setLinkUrl(link?.url ?? "");
+      setPreview(
+        link
+          ? {
+              url: link.url,
+              title: link.og_title,
+              description: link.og_description,
+              image: link.og_image,
+              siteName: link.og_site_name,
+              ok: link.fetched_ok,
+            }
+          : null,
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, editPin?.id]);
 
   function reset() {
+    for (const item of items) if (item.kind === "new") URL.revokeObjectURL(item.url);
     setStep(0);
-    setFiles([]);
+    setItems([]);
     setLinkUrl("");
     setPreview(null);
     setTitle("");
     setCategory("other");
     setDescription("");
+    setLocation({ lng: THAILAND_CENTER[0], lat: THAILAND_CENTER[1] });
     setSaving(false);
     setError(null);
   }
@@ -53,6 +116,38 @@ export default function AddPinFlow() {
   function dismiss() {
     close();
     reset();
+  }
+
+  function addFiles(files: File[]) {
+    setItems((current) =>
+      [
+        ...current,
+        ...files.map((file) => ({
+          key: crypto.randomUUID(),
+          kind: "new" as const,
+          file,
+          url: URL.createObjectURL(file),
+        })),
+      ].slice(0, MAX_PHOTOS),
+    );
+  }
+
+  function removeItem(key: string) {
+    setItems((current) => {
+      const item = current.find((i) => i.key === key);
+      if (item?.kind === "new") URL.revokeObjectURL(item.url);
+      return current.filter((i) => i.key !== key);
+    });
+  }
+
+  function onDragEnd(e: DragEndEvent) {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    setItems((current) => {
+      const oldIndex = current.findIndex((i) => i.key === active.id);
+      const newIndex = current.findIndex((i) => i.key === over.id);
+      return arrayMove(current, oldIndex, newIndex);
+    });
   }
 
   async function fetchPreview() {
@@ -81,47 +176,106 @@ export default function AddPinFlow() {
     setError(null);
     try {
       const db = supabase();
-      const { data: pin, error: pinError } = await db
-        .from("pins")
-        .insert({
-          title: title.trim(),
-          description: description.trim() || null,
-          lat: location.lat,
-          lng: location.lng,
-          category,
-          created_by: member.id,
-        })
-        .select("id, lng, lat")
-        .single();
-      if (pinError) throw pinError;
+      const fields = {
+        title: title.trim(),
+        description: description.trim() || null,
+        lat: location.lat,
+        lng: location.lng,
+        category,
+      };
 
-      if (files.length > 0) {
-        const uploaded = await Promise.all(files.map((f) => uploadPinImage(f, pin.id)));
-        const { error: imgError } = await db.from("pin_images").insert(
-          uploaded.map((u, i) => ({ pin_id: pin.id, ...u, sort_order: i })),
-        );
-        if (imgError) throw imgError;
-      }
+      let pinId: string;
+      if (editPin) {
+        pinId = editPin.id;
+        const { error: pinError } = await db.from("pins").update(fields).eq("id", pinId);
+        if (pinError) throw pinError;
 
-      const url = linkUrl.trim();
-      if (url) {
-        const p = preview;
-        const { error: linkError } = await db.from("pin_links").insert({
-          pin_id: pin.id,
-          url,
-          og_title: p?.title ?? null,
-          og_description: p?.description ?? null,
-          og_image: p?.image ?? null,
-          og_site_name: p?.siteName ?? null,
-          fetched_ok: p?.ok ?? false,
-        });
-        if (linkError) throw linkError;
+        // Photos: delete the removed, re-order the kept, upload the new
+        const keptKeys = new Set(items.map((i) => i.key));
+        const removed = editPin.pin_images.filter((img) => !keptKeys.has(img.id));
+        if (removed.length) {
+          const { error: delError } = await db
+            .from("pin_images")
+            .delete()
+            .in("id", removed.map((r) => r.id));
+          if (delError) throw delError;
+          await db.storage
+            .from("pin-images")
+            .remove(removed.flatMap((r) => [r.storage_path, ...(r.thumb_path ? [r.thumb_path] : [])]));
+        }
+        for (const [index, item] of items.entries()) {
+          if (item.kind === "existing") {
+            const { error: sortError } = await db
+              .from("pin_images")
+              .update({ sort_order: index })
+              .eq("id", item.image.id);
+            if (sortError) throw sortError;
+          } else {
+            const uploaded = await uploadPinImage(item.file, pinId);
+            const { error: imgError } = await db
+              .from("pin_images")
+              .insert({ pin_id: pinId, ...uploaded, sort_order: index });
+            if (imgError) throw imgError;
+          }
+        }
+
+        // Link: replace when changed, drop when cleared
+        const url = linkUrl.trim();
+        const existingUrl = editPin.pin_links[0]?.url ?? "";
+        if (url !== existingUrl) {
+          const { error: linkDelError } = await db.from("pin_links").delete().eq("pin_id", pinId);
+          if (linkDelError) throw linkDelError;
+          if (url) {
+            const { error: linkError } = await db.from("pin_links").insert({
+              pin_id: pinId,
+              url,
+              og_title: preview?.title ?? null,
+              og_description: preview?.description ?? null,
+              og_image: preview?.image ?? null,
+              og_site_name: preview?.siteName ?? null,
+              fetched_ok: preview?.ok ?? false,
+            });
+            if (linkError) throw linkError;
+          }
+        }
+      } else {
+        const { data: pin, error: pinError } = await db
+          .from("pins")
+          .insert({ ...fields, created_by: member.id })
+          .select("id")
+          .single();
+        if (pinError) throw pinError;
+        pinId = pin.id;
+
+        for (const [index, item] of items.entries()) {
+          if (item.kind !== "new") continue;
+          const uploaded = await uploadPinImage(item.file, pinId);
+          const { error: imgError } = await db
+            .from("pin_images")
+            .insert({ pin_id: pinId, ...uploaded, sort_order: index });
+          if (imgError) throw imgError;
+        }
+
+        const url = linkUrl.trim();
+        if (url) {
+          const { error: linkError } = await db.from("pin_links").insert({
+            pin_id: pinId,
+            url,
+            og_title: preview?.title ?? null,
+            og_description: preview?.description ?? null,
+            og_image: preview?.image ?? null,
+            og_site_name: preview?.siteName ?? null,
+            fetched_ok: preview?.ok ?? false,
+          });
+          if (linkError) throw linkError;
+        }
       }
 
       await qc.invalidateQueries({ queryKey: ["pins"] });
+      const dest = { lng: location.lng, lat: location.lat };
       dismiss();
-      setFlyTo({ lng: pin.lng, lat: pin.lat });
-      selectPin(pin.id);
+      setFlyTo(dest);
+      selectPin(pinId);
     } catch (e) {
       setError(e instanceof Error ? e.message : "That didn't stick. Try again?");
       setSaving(false);
@@ -131,13 +285,16 @@ export default function AddPinFlow() {
   if (!open) return null;
 
   const canNext = step === 1 ? title.trim().length > 0 : true;
+  const editing = Boolean(editPin);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-paper">
       {/* Header */}
       <header className="flex items-center justify-between px-4 pb-2 pt-[calc(env(safe-area-inset-top)+12px)]">
         <div>
-          <p className="font-hand text-lg leading-none text-sea-deep">step {step + 1} of 3</p>
+          <p className="font-hand text-lg leading-none text-sea-deep">
+            {editing ? "fixing up your idea" : `step ${step + 1} of 3`}
+          </p>
           <h2 className="font-display text-2xl font-black">{STEPS[step]}</h2>
         </div>
         <button
@@ -172,7 +329,7 @@ export default function AddPinFlow() {
                 hidden
                 onChange={(e) => {
                   const picked = Array.from(e.target.files ?? []);
-                  if (picked.length) setFiles((f) => [...f, ...picked].slice(0, 6));
+                  if (picked.length) addFiles(picked);
                   e.target.value = "";
                 }}
               />
@@ -181,29 +338,25 @@ export default function AddPinFlow() {
                 className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-ink/25 bg-paper-deep/50 py-8 font-bold text-ink-soft active:scale-[0.98]"
               >
                 <Camera size={22} />
-                {files.length ? "Add more photos" : "Add photos"}
+                {items.length ? "Add more photos" : "Add photos"}
               </button>
-              {files.length > 0 && (
-                <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto">
-                  {files.map((f, i) => (
-                    <div key={i} className="relative shrink-0">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={objectUrls[i]}
-                        alt=""
-                        className="h-24 w-24 rounded-xl border-2 border-white object-cover shadow-paper"
-                        style={{ transform: `rotate(${i % 2 ? 2 : -2}deg)` }}
-                      />
-                      <button
-                        onClick={() => setFiles((fs) => fs.filter((_, j) => j !== i))}
-                        aria-label="Remove photo"
-                        className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-ink text-paper"
-                      >
-                        <X size={13} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
+              {items.length > 0 && (
+                <>
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+                    <SortableContext items={items.map((i) => i.key)} strategy={horizontalListSortingStrategy}>
+                      <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto py-1">
+                        {items.map((item, i) => (
+                          <SortablePhoto key={item.key} item={item} index={i} onRemove={removeItem} />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
+                  {items.length > 1 && (
+                    <p className="mt-1 font-hand text-lg text-ink-soft/70">
+                      hold and drag to reorder. first photo is the star ⭐
+                    </p>
+                  )}
+                </>
               )}
             </div>
 
@@ -302,7 +455,10 @@ export default function AddPinFlow() {
 
         {step === 2 && (
           <div className="h-full min-h-[340px]">
-            <LocationPicker onChange={setLocation} />
+            <LocationPicker
+              onChange={setLocation}
+              initial={editing ? { lng: editPin!.lng, lat: editPin!.lat } : undefined}
+            />
           </div>
         )}
 
@@ -338,10 +494,56 @@ export default function AddPinFlow() {
             className="flex flex-1 items-center justify-center gap-2 rounded-full bg-chili py-3 font-display text-lg font-bold text-paper active:scale-[0.98] disabled:opacity-60"
           >
             {saving && <Loader2 size={18} className="animate-spin" />}
-            {saving ? "Pinning..." : "Pin it 📌"}
+            {saving ? "Saving..." : editing ? "Save changes ✅" : "Pin it 📌"}
           </button>
         )}
       </footer>
+    </div>
+  );
+}
+
+function SortablePhoto({
+  item,
+  index,
+  onRemove,
+}: {
+  item: PhotoItem;
+  index: number;
+  onRemove: (key: string) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: item.key });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={`relative shrink-0 ${isDragging ? "z-10" : ""}`}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        {...attributes}
+        {...listeners}
+        src={itemSrc(item)}
+        alt=""
+        draggable={false}
+        className={`h-24 w-24 touch-none rounded-xl border-2 border-white object-cover shadow-paper ${
+          isDragging ? "shadow-lifted" : ""
+        }`}
+        style={{ transform: `rotate(${index % 2 ? 2 : -2}deg)` }}
+      />
+      {index === 0 && (
+        <span className="absolute -left-1.5 -top-1.5 rounded-full bg-marigold px-1.5 py-0.5 text-[10px] font-bold text-paper shadow-paper">
+          ⭐
+        </span>
+      )}
+      <button
+        onClick={() => onRemove(item.key)}
+        aria-label="Remove photo"
+        className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-ink text-paper"
+      >
+        <X size={13} />
+      </button>
     </div>
   );
 }

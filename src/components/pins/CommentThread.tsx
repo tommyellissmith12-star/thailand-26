@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { Send } from "lucide-react";
-import { memberById } from "@/lib/constants";
+import { useMembersMap } from "@/lib/members";
 import { useMember } from "@/lib/member";
 import { useAddComment, useComments } from "@/lib/queries";
 import Avatar from "@/components/ui/Avatar";
 
 export default function CommentThread({ pinId }: { pinId: string }) {
   const { member } = useMember();
+  const members = useMembersMap();
   const { data: comments = [] } = useComments(pinId);
   const addComment = useAddComment();
   const [body, setBody] = useState("");
@@ -33,8 +34,8 @@ export default function CommentThread({ pinId }: { pinId: string }) {
           <li key={c.id} className="flex items-start gap-2">
             <Avatar memberId={c.member_id} size={30} />
             <div className="min-w-0 flex-1 rounded-2xl rounded-tl-sm bg-paper-deep/70 px-3 py-2">
-              <p className="text-xs font-bold" style={{ color: memberById(c.member_id)?.color }}>
-                {memberById(c.member_id)?.name ?? "?"}
+              <p className="text-xs font-bold" style={{ color: members.get(c.member_id)?.color }}>
+                {members.get(c.member_id)?.name ?? "?"}
               </p>
               <p className="whitespace-pre-wrap break-words text-sm">{c.body}</p>
             </div>

@@ -2,14 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { MEMBERS, type Member } from "@/lib/constants";
+import type { Member } from "@/lib/constants";
+import { useMembers } from "@/lib/members";
 import { useMember } from "@/lib/member";
+import { publicImageUrl } from "@/lib/supabase";
 
 const PIN_LENGTH = 4;
 
 export default function EnterPage() {
   const router = useRouter();
   const { setMember } = useMember();
+  const members = useMembers();
   // /enter?who=1 jumps straight to the member picker (used by "switch user";
   // the PIN cookie already gates every other page, so this is safe).
   const [stage, setStage] = useState<"pin" | "who">(() =>
@@ -107,7 +110,7 @@ export default function EnterPage() {
             and you are...
           </p>
           <div className="grid grid-cols-2 gap-3">
-            {MEMBERS.map((m, i) => (
+            {members.map((m, i) => (
               <button
                 key={m.id}
                 onClick={() => pick(m)}
@@ -115,10 +118,19 @@ export default function EnterPage() {
                 style={{ animationDelay: `${i * 60}ms` }}
               >
                 <span
-                  className="flex h-12 w-12 items-center justify-center rounded-full text-2xl"
+                  className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full text-2xl"
                   style={{ background: m.color }}
                 >
-                  {m.avatar}
+                  {m.photoPath ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={publicImageUrl(m.photoPath)}
+                      alt={m.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    m.avatar
+                  )}
                 </span>
                 <span className="text-left">
                   <span className="block font-display text-lg font-bold">{m.name}</span>

@@ -66,6 +66,25 @@ export function useItinerary() {
   });
 }
 
+export function useUpdateProfile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: {
+      memberId: string;
+      name: string;
+      avatar: string;
+      photoPath: string | null;
+    }) => {
+      const { error } = await supabase()
+        .from("members")
+        .update({ name: args.name, avatar: args.avatar, photo_path: args.photoPath })
+        .eq("id", args.memberId);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["members"] }),
+  });
+}
+
 export interface NewPin {
   title: string;
   description: string | null;

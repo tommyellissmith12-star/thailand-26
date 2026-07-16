@@ -3,7 +3,8 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { UserRound } from "lucide-react";
-import { MEMBERS, memberById, CATEGORIES } from "@/lib/constants";
+import { CATEGORIES } from "@/lib/constants";
+import { useMembers } from "@/lib/members";
 import { useMember } from "@/lib/member";
 import { useCommentCounts, usePins } from "@/lib/queries";
 import { publicImageUrl } from "@/lib/supabase";
@@ -12,6 +13,7 @@ import Avatar from "@/components/ui/Avatar";
 
 export default function BoardPage() {
   const { member } = useMember();
+  const allMembers = useMembers();
   const { data: pins = [] } = usePins();
   const { data: commentCounts = {} } = useCommentCounts();
   const selectPin = useUiStore((s) => s.selectPin);
@@ -31,11 +33,11 @@ export default function BoardPage() {
 
   const contributions = useMemo(
     () =>
-      MEMBERS.map((m) => ({
+      allMembers.map((m) => ({
         member: m,
         count: pins.filter((p) => p.created_by === m.id).length,
       })).sort((a, b) => b.count - a.count),
-    [pins],
+    [allMembers, pins],
   );
 
   const stampedCount = pins.filter((p) => p.status === "stamped").length;

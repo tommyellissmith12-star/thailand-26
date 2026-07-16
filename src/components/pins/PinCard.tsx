@@ -1,7 +1,8 @@
 "use client";
 
 import { MessageCircle } from "lucide-react";
-import { CATEGORIES, memberById, isRejected } from "@/lib/constants";
+import { CATEGORIES, isRejected } from "@/lib/constants";
+import { useMembersMap } from "@/lib/members";
 import { publicImageUrl } from "@/lib/supabase";
 import { useUiStore } from "@/lib/ui-store";
 import type { Pin } from "@/lib/types";
@@ -19,7 +20,7 @@ export default function PinCard({
 }) {
   const selectPin = useUiStore((s) => s.selectPin);
   const cat = CATEGORIES[pin.category];
-  const author = memberById(pin.created_by);
+  const author = useMembersMap().get(pin.created_by);
   const cover = pin.pin_images[0];
   const linkImage = pin.pin_links.find((l) => l.og_image)?.og_image;
   const rejected = isRejected(pin.status);

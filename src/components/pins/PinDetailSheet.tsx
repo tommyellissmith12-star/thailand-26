@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { Drawer } from "vaul";
-import { MapPin, Stamp, Trash2 } from "lucide-react";
+import { MapPin, Pencil, Stamp, Trash2 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
-import { CATEGORIES, memberById, isRejected, type PinStatus } from "@/lib/constants";
+import { CATEGORIES, isRejected, type PinStatus } from "@/lib/constants";
+import { useMembersMap } from "@/lib/members";
 import { useMember } from "@/lib/member";
 import { useDeletePin, usePins, useSetPinStatus } from "@/lib/queries";
 import { publicImageUrl } from "@/lib/supabase";
@@ -20,6 +21,7 @@ export default function PinDetailSheet() {
   const selectedPinId = useUiStore((s) => s.selectedPinId);
   const selectPin = useUiStore((s) => s.selectPin);
   const setFlyTo = useUiStore((s) => s.setFlyTo);
+  const openEditPin = useUiStore((s) => s.openEditPin);
   const { member } = useMember();
   const setStatus = useSetPinStatus();
   const deletePin = useDeletePin();
@@ -29,7 +31,7 @@ export default function PinDetailSheet() {
 
   const pin = pins.find((p) => p.id === selectedPinId) ?? null;
   const cat = pin ? CATEGORIES[pin.category] : null;
-  const author = memberById(pin?.created_by);
+  const author = useMembersMap().get(pin?.created_by ?? "");
   const stamped = pin?.status === "stamped";
   const verdict = pin && isRejected(pin.status) ? (pin.status as "torched" | "shat") : null;
 
@@ -185,6 +187,14 @@ export default function PinDetailSheet() {
                       💩 {verdict === "shat" ? "Hose it down" : "Shit on it"}
                     </button>
                   </>
+                )}
+                {member?.id === pin.created_by && (
+                  <button
+                    onClick={() => openEditPin(pin)}
+                    className="flex items-center gap-1.5 rounded-full border-2 border-ink/15 px-3 py-1.5 text-sm font-bold text-ink-soft transition-transform active:scale-95"
+                  >
+                    <Pencil size={15} /> Edit
+                  </button>
                 )}
                 {member && (member.id === pin.created_by || member.isApprover) && (
                   <button

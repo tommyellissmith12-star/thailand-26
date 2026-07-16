@@ -6,6 +6,7 @@ import Providers from "./providers";
 import TabBar from "@/components/ui/TabBar";
 import AddPinFlow from "@/components/pins/AddPinFlow";
 import PinDetailSheet from "@/components/pins/PinDetailSheet";
+import ProfileSheet from "@/components/ui/ProfileSheet";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -55,6 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
           <PinDetailSheet />
           <AddPinFlow />
+          <ProfileSheet />
           <TabBar />
         </Providers>
       </body>

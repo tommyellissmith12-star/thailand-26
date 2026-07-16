@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { usePins, useItinerary } from "@/lib/queries";
 import { supabaseConfigured } from "@/lib/supabase";
 import { useMember } from "@/lib/member";
+import { useUiStore } from "@/lib/ui-store";
 import type { Category } from "@/lib/constants";
 import CategoryChips from "@/components/pins/CategoryChips";
 import Avatar from "@/components/ui/Avatar";
@@ -25,6 +25,7 @@ export default function MapPage() {
   const [activeCategories, setActiveCategories] = useState<Category[] | null>(null);
   const [stampedOnly, setStampedOnly] = useState(false);
   const { member } = useMember();
+  const setProfileOpen = useUiStore((s) => s.setProfileOpen);
 
   return (
     <main className="relative h-dvh w-full overflow-hidden" style={{ touchAction: "none" }}>
@@ -50,9 +51,13 @@ export default function MapPage() {
             >
               The Plan
             </button>
-            <Link href="/enter?who=1" aria-label="Switch traveller" className="active:scale-90">
+            <button
+              onClick={() => setProfileOpen(true)}
+              aria-label="Your profile"
+              className="active:scale-90"
+            >
               <Avatar memberId={member?.id} size={34} />
-            </Link>
+            </button>
           </div>
         </div>
         <div className="pointer-events-auto mt-2">

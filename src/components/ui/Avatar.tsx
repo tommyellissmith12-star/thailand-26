@@ -1,4 +1,7 @@
-import { memberById } from "@/lib/constants";
+"use client";
+
+import { useMembersMap } from "@/lib/members";
+import { publicImageUrl } from "@/lib/supabase";
 
 export default function Avatar({
   memberId,
@@ -7,12 +10,14 @@ export default function Avatar({
   memberId: string | null | undefined;
   size?: number;
 }) {
-  const member = memberById(memberId);
+  const members = useMembersMap();
+  const member = memberId ? members.get(memberId) : undefined;
   if (!member) return null;
+
   return (
     <span
       title={member.name}
-      className="inline-flex shrink-0 items-center justify-center rounded-full border-2 border-paper shadow-paper"
+      className="inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-paper shadow-paper"
       style={{
         width: size,
         height: size,
@@ -20,7 +25,17 @@ export default function Avatar({
         fontSize: size * 0.55,
       }}
     >
-      {member.avatar}
+      {member.photoPath ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={publicImageUrl(member.photoPath)}
+          alt={member.name}
+          className="h-full w-full object-cover"
+          draggable={false}
+        />
+      ) : (
+        member.avatar
+      )}
     </span>
   );
 }

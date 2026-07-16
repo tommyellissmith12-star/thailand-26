@@ -35,6 +35,18 @@ async function dimensions(file: File): Promise<{ width: number; height: number }
   }
 }
 
+// Small square-ish profile photo -> storage. New filename each change; old
+// files just orphan (family-scale, not worth a cleanup pass).
+export async function uploadProfilePhoto(file: File, memberId: string): Promise<string> {
+  const small = await toWebp(file, 320, 0.05);
+  const path = `avatars/${memberId}-${crypto.randomUUID()}.webp`;
+  const { error } = await supabase()
+    .storage.from("pin-images")
+    .upload(path, small, { contentType: "image/webp" });
+  if (error) throw error;
+  return path;
+}
+
 // Camera roll photo -> compressed webp (full + thumb) -> Supabase Storage.
 // The canvas re-encode inside browser-image-compression bakes in EXIF
 // orientation, so sideways iPhone photos come out upright.

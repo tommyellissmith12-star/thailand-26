@@ -29,6 +29,9 @@ export function useBoardChannel() {
       .on("postgres_changes", { event: "*", schema: "public", table: "itinerary_items" }, () =>
         qc.invalidateQueries({ queryKey: ["itinerary"] }),
       )
+      .on("postgres_changes", { event: "*", schema: "public", table: "members" }, () =>
+        qc.invalidateQueries({ queryKey: ["members"] }),
+      )
       .subscribe();
 
     return () => {

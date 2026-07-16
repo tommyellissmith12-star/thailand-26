@@ -13,8 +13,10 @@ interface Result {
 
 export default function LocationPicker({
   onChange,
+  initial,
 }: {
   onChange: (loc: { lng: number; lat: number }) => void;
+  initial?: { lng: number; lat: number };
 }) {
   const mapRef = useRef<MapRef>(null);
   const [query, setQuery] = useState("");
@@ -51,7 +53,11 @@ export default function LocationPicker({
     <div className="relative h-full w-full overflow-hidden rounded-2xl border-2 border-ink/15">
       <Map
         ref={mapRef}
-        initialViewState={{ longitude: THAILAND_CENTER[0], latitude: THAILAND_CENTER[1], zoom: 5.2 }}
+        initialViewState={{
+          longitude: initial?.lng ?? THAILAND_CENTER[0],
+          latitude: initial?.lat ?? THAILAND_CENTER[1],
+          zoom: initial ? 10 : 5.2,
+        }}
         mapStyle="/map-style.json"
         maxBounds={THAILAND_BOUNDS}
         minZoom={4.8}

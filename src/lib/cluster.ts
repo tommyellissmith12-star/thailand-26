@@ -7,7 +7,7 @@ export interface PinCluster {
   pins: Pin[];
 }
 
-const RADIUS_PX = 52;
+const RADIUS_PX = 30;
 
 function project(lng: number, lat: number, zoom: number): { x: number; y: number } {
   const scale = 256 * Math.pow(2, zoom);
