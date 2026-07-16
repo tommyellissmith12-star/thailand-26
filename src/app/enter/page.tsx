@@ -122,8 +122,8 @@ export default function EnterPage() {
                 </span>
                 <span className="text-left">
                   <span className="block font-display text-lg font-bold">{m.name}</span>
-                  {m.isApprover && (
-                    <span className="block font-hand text-sm text-chili">holds the purse</span>
+                  {m.tag && (
+                    <span className="block font-hand text-sm text-chili">{m.tag}</span>
                   )}
                 </span>
               </button>

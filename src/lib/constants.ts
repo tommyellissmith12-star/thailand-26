@@ -4,7 +4,7 @@ export type Category =
 
 export type PinStatus = "idea" | "shortlist" | "stamped" | "torched" | "shat";
 
-// Jon & Rachel's rejection verdicts. Anything here is dead unless mercy is shown.
+// Dad & Rach's rejection verdicts. Anything here is dead unless mercy is shown.
 export const REJECTED: PinStatus[] = ["torched", "shat"];
 export const isRejected = (s: PinStatus) => REJECTED.includes(s);
 
@@ -14,12 +14,13 @@ export interface Member {
   avatar: string;
   color: string;
   isApprover: boolean;
+  tag?: string; // shown under the name on the member picker
 }
 
 // Fixed family roster. Ids match supabase/seed.sql exactly.
 export const MEMBERS: Member[] = [
-  { id: "00000000-0000-4000-8000-000000000001", name: "Jon",    avatar: "🤴", color: "#3E6C9E", isApprover: true },
-  { id: "00000000-0000-4000-8000-000000000002", name: "Rachel", avatar: "👸", color: "#C74A34", isApprover: true },
+  { id: "00000000-0000-4000-8000-000000000001", name: "Dad",    avatar: "🤴", color: "#3E6C9E", isApprover: true, tag: "King of the Trip" },
+  { id: "00000000-0000-4000-8000-000000000002", name: "Rach"  , avatar: "👸", color: "#C74A34", isApprover: true, tag: "Queen of the Trip" },
   { id: "00000000-0000-4000-8000-000000000003", name: "Ruby",   avatar: "🌼", color: "#7E5A9B", isApprover: false },
   { id: "00000000-0000-4000-8000-000000000004", name: "Tom",    avatar: "🤠", color: "#2A9D8F", isApprover: false },
   { id: "00000000-0000-4000-8000-000000000005", name: "Neve",   avatar: "🌺", color: "#F2A93B", isApprover: false },

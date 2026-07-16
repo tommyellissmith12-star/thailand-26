@@ -1,6 +1,6 @@
 # Thailand '26 — the family trip board
 
-Private moodboard for the Dec 27 → Jan roadtrip. Everyone pins ideas, photos and links onto a map of Thailand, votes with reactions, argues in the comments, and Jon or Rachel stamp the winners into the itinerary.
+Private moodboard for the Dec 27 → Jan roadtrip. Everyone pins ideas, photos and links onto a map of Thailand, votes with reactions, argues in the comments, and Dad or Rach stamp the winners into the itinerary.
 
 ## Stack
 
@@ -20,7 +20,7 @@ Next.js 15 (App Router) + Supabase (Postgres, Storage, Realtime) + MapLibre GL w
 - **+** adds an idea in 3 steps: photos or a link, words, then drag the map under the crosshair pin (with place search).
 - **Feed** is the same board as a scrollable list. **Board** is the leaderboard by reactions.
 - **Days** is the itinerary: stamped ideas wait in the tray, tap to give them a day, drag to reorder within a day.
-- Only Jon and Rachel see the stamp button. Everyone can vote and comment.
+- Only Dad and Rach see the stamp button. Everyone can vote and comment.
 
 ## Honest security note
 

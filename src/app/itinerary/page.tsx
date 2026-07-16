@@ -73,7 +73,7 @@ export default function ItineraryPage() {
         <h2 className="font-hand text-xl text-chili">stamped, not scheduled yet</h2>
         {stamped.length === 0 && (
           <p className="mt-1 text-sm text-ink-soft">
-            Nothing is locked in yet. Once Jon or Rachel stamp an idea, it lands here
+            Nothing is locked in yet. Once Dad or Rach stamp an idea, it lands here
             ready to be given a day.
           </p>
         )}
