@@ -165,16 +165,15 @@ export default function PinDetailSheet() {
                       <Stamp size={15} />
                       {stamped ? "Un-stamp it" : "Stamp it. We're going"}
                     </button>
-                    <button
-                      onClick={() => setVerdict("torched")}
-                      className={`flex items-center gap-1.5 rounded-full border-2 px-3 py-1.5 text-sm font-bold transition-transform active:scale-95 ${
-                        verdict === "torched"
-                          ? "border-marigold bg-marigold/20 text-ink"
-                          : "border-marigold/70 text-ink-soft"
-                      }`}
-                    >
-                      🔥 {verdict === "torched" ? "Have mercy" : "Torch it"}
-                    </button>
+                    {/* Torching retired as an option; existing torched pins keep their undo */}
+                    {verdict === "torched" && (
+                      <button
+                        onClick={() => setVerdict("torched")}
+                        className="flex items-center gap-1.5 rounded-full border-2 border-marigold bg-marigold/20 px-3 py-1.5 text-sm font-bold text-ink transition-transform active:scale-95"
+                      >
+                        🔥 Have mercy
+                      </button>
+                    )}
                     <button
                       onClick={() => setVerdict("shat")}
                       className={`flex items-center gap-1.5 rounded-full border-2 px-3 py-1.5 text-sm font-bold transition-transform active:scale-95 ${
