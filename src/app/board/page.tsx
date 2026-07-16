@@ -105,9 +105,6 @@ export default function BoardPage() {
                 onClick={() => selectPin(pin.id)}
                 className="flex w-full items-center gap-3 rounded-xl bg-white/70 px-3 py-2.5 shadow-paper active:scale-[0.98]"
               >
-                <span className="w-6 font-display text-sm font-black text-ink-soft">
-                  {i + 4}
-                </span>
                 <span className="text-lg">{CATEGORIES[pin.category].emoji}</span>
                 <span className="min-w-0 flex-1 truncate text-left text-sm font-bold">
                   {pin.title}

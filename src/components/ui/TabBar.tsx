@@ -1,20 +1,45 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Map, ListTree, CalendarDays, Trophy, Plus } from "lucide-react";
 import { useUiStore } from "@/lib/ui-store";
+import { usePins } from "@/lib/queries";
+import { useMember } from "@/lib/member";
 
 const TABS = [
   { href: "/", label: "Map", icon: Map },
   { href: "/feed", label: "Feed", icon: ListTree },
   { href: "/itinerary", label: "Days", icon: CalendarDays },
-  { href: "/board", label: "Board", icon: Trophy },
+  { href: "/board", label: "Leaderboard", icon: Trophy },
 ];
+
+const SEEN_KEY = "thailand26.feedSeenAt";
 
 export default function TabBar() {
   const pathname = usePathname();
   const openAddPin = useUiStore((s) => s.openAddPin);
+  const { member } = useMember();
+  const { data: pins = [] } = usePins();
+  const [seenAt, setSeenAt] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSeenAt(localStorage.getItem(SEEN_KEY) ?? new Date(0).toISOString());
+  }, []);
+
+  // Visiting the feed clears the dot
+  useEffect(() => {
+    if (pathname === "/feed") {
+      const now = new Date().toISOString();
+      localStorage.setItem(SEEN_KEY, now);
+      setSeenAt(now);
+    }
+  }, [pathname, pins.length]);
+
+  const hasNew =
+    seenAt !== null &&
+    pins.some((p) => p.created_at > seenAt && p.created_by !== member?.id);
 
   if (pathname === "/enter") return null;
 
@@ -31,7 +56,12 @@ export default function TabBar() {
           active ? "text-chili" : "text-ink-soft"
         }`}
       >
-        <Icon size={22} strokeWidth={active ? 2.6 : 2} />
+        <span className="relative">
+          <Icon size={22} strokeWidth={active ? 2.6 : 2} />
+          {href === "/feed" && hasNew && !active && (
+            <span className="absolute -right-1.5 -top-1 h-2.5 w-2.5 rounded-full border-2 border-paper bg-chili" />
+          )}
+        </span>
         <span className={`text-[10px] tracking-wide ${active ? "font-bold" : ""}`}>
           {label}
         </span>

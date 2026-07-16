@@ -66,6 +66,86 @@ export function useItinerary() {
   });
 }
 
+export interface AppSettings {
+  title: string;
+  admin_member_id: string | null;
+}
+
+export function useSettings() {
+  return useQuery({
+    queryKey: ["settings"],
+    staleTime: 60_000,
+    queryFn: async (): Promise<AppSettings> => {
+      const { data, error } = await supabase()
+        .from("app_settings")
+        .select("title, admin_member_id")
+        .eq("id", 1)
+        .maybeSingle();
+      if (error) throw error;
+      return (data as AppSettings) ?? { title: "Thailand '26", admin_member_id: null };
+    },
+    placeholderData: { title: "Thailand '26", admin_member_id: null },
+  });
+}
+
+export function useUpdateTitle() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (title: string) => {
+      const { error } = await supabase()
+        .from("app_settings")
+        .update({ title })
+        .eq("id", 1);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["settings"] }),
+  });
+}
+
+export interface Notification {
+  id: string;
+  recipient_id: string;
+  actor_id: string;
+  kind: "reaction" | "comment";
+  pin_id: string | null;
+  emoji: string | null;
+  body: string | null;
+  read: boolean;
+  created_at: string;
+}
+
+export function useNotifications(memberId: string | null) {
+  return useQuery({
+    queryKey: ["notifications", memberId],
+    enabled: Boolean(memberId),
+    queryFn: async (): Promise<Notification[]> => {
+      const { data, error } = await supabase()
+        .from("notifications")
+        .select("*")
+        .eq("recipient_id", memberId!)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return (data ?? []) as Notification[];
+    },
+  });
+}
+
+export function useMarkNotificationsRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (memberId: string) => {
+      const { error } = await supabase()
+        .from("notifications")
+        .update({ read: true })
+        .eq("recipient_id", memberId)
+        .eq("read", false);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications"] }),
+  });
+}
+
 export function useUpdateProfile() {
   const qc = useQueryClient();
   return useMutation({

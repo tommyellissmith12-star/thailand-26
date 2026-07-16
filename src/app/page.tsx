@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import { usePins, useItinerary } from "@/lib/queries";
+import { Bell, Check, Pencil } from "lucide-react";
+import { usePins, useItinerary, useNotifications, useSettings, useUpdateTitle } from "@/lib/queries";
 import { supabaseConfigured } from "@/lib/supabase";
 import { useMember } from "@/lib/member";
 import { useUiStore } from "@/lib/ui-store";
 import type { Category } from "@/lib/constants";
 import CategoryChips from "@/components/pins/CategoryChips";
 import Avatar from "@/components/ui/Avatar";
+import NotificationsSheet from "@/components/ui/NotificationsSheet";
 
 const ThailandMap = dynamic(() => import("@/components/map/ThailandMap"), {
   ssr: false,
@@ -22,34 +24,77 @@ const ThailandMap = dynamic(() => import("@/components/map/ThailandMap"), {
 export default function MapPage() {
   const { data: pins = [] } = usePins();
   const { data: itinerary = [] } = useItinerary();
+  const { data: settings = { title: "Thailand '26", admin_member_id: null } } = useSettings();
   const [activeCategories, setActiveCategories] = useState<Category[] | null>(null);
-  const [stampedOnly, setStampedOnly] = useState(false);
   const { member } = useMember();
   const setProfileOpen = useUiStore((s) => s.setProfileOpen);
+  const { data: notifications = [] } = useNotifications(member?.id ?? null);
+  const unread = notifications.filter((n) => !n.read).length;
+  const [bellOpen, setBellOpen] = useState(false);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState("");
+  const updateTitle = useUpdateTitle();
+  const isAdmin = Boolean(member && settings.admin_member_id === member.id);
+
+  function saveTitle() {
+    const trimmed = titleDraft.trim();
+    if (trimmed && trimmed !== settings.title) updateTitle.mutate(trimmed.slice(0, 40));
+    setEditingTitle(false);
+  }
 
   return (
     <main className="relative h-dvh w-full overflow-hidden" style={{ touchAction: "none" }}>
-      <ThailandMap
-        pins={pins}
-        itinerary={itinerary}
-        activeCategories={activeCategories}
-        stampedOnly={stampedOnly}
-      />
+      <ThailandMap pins={pins} itinerary={itinerary} activeCategories={activeCategories} />
 
       {/* Floating header */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 pt-[env(safe-area-inset-top)]">
         <div className="flex items-start justify-between px-4 pt-3">
-          <h1 className="font-display text-2xl font-black leading-none drop-shadow-[0_1px_0_rgba(250,243,227,0.9)]">
-            THAILAND<span className="align-super text-sm text-chili">&rsquo;26</span>
-          </h1>
+          {editingTitle ? (
+            <span className="pointer-events-auto flex items-center gap-2">
+              <input
+                autoFocus
+                value={titleDraft}
+                onChange={(e) => setTitleDraft(e.target.value.slice(0, 40))}
+                onKeyDown={(e) => e.key === "Enter" && saveTitle()}
+                className="w-48 rounded-xl border-2 border-sea-deep bg-paper px-2 py-1 font-display text-xl font-black outline-none"
+              />
+              <button
+                onClick={saveTitle}
+                aria-label="Save title"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-sea-deep text-paper active:scale-90"
+              >
+                <Check size={16} />
+              </button>
+            </span>
+          ) : (
+            <h1 className="pointer-events-auto font-display text-2xl font-black leading-none drop-shadow-[0_1px_0_rgba(250,243,227,0.9)]">
+              {settings.title}
+              {isAdmin && (
+                <button
+                  onClick={() => {
+                    setTitleDraft(settings.title);
+                    setEditingTitle(true);
+                  }}
+                  aria-label="Edit title"
+                  className="ml-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-paper/80 align-middle text-ink-soft shadow-paper active:scale-90"
+                >
+                  <Pencil size={12} />
+                </button>
+              )}
+            </h1>
+          )}
           <div className="pointer-events-auto flex items-center gap-2">
             <button
-              onClick={() => setStampedOnly((v) => !v)}
-              className={`stamp px-3 py-1 text-[11px] transition-all active:scale-90 ${
-                stampedOnly ? "bg-chili/10 opacity-100" : "bg-paper/80 opacity-60"
-              }`}
+              onClick={() => setBellOpen(true)}
+              aria-label="Notifications"
+              className="relative flex h-9 w-9 items-center justify-center rounded-full bg-paper/85 text-ink shadow-paper active:scale-90"
             >
-              The Plan
+              <Bell size={18} />
+              {unread > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-chili px-1 text-[10px] font-bold text-paper">
+                  {unread > 9 ? "9+" : unread}
+                </span>
+              )}
             </button>
             <button
               onClick={() => setProfileOpen(true)}
@@ -64,6 +109,8 @@ export default function MapPage() {
           <CategoryChips value={activeCategories} onChange={setActiveCategories} />
         </div>
       </div>
+
+      <NotificationsSheet open={bellOpen} onOpenChange={setBellOpen} />
 
       {!supabaseConfigured && (
         <div className="absolute inset-x-4 bottom-28 z-10 rounded-2xl border-2 border-chili/40 bg-paper p-4 shadow-lifted">
