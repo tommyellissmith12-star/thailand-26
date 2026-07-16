@@ -65,7 +65,7 @@ export default function PinDetailSheet() {
         <Drawer.Overlay className="fixed inset-0 z-40 bg-ink/30" />
         <Drawer.Content
           aria-describedby={undefined}
-          className="relative fixed inset-x-0 bottom-0 z-50 flex max-h-[92dvh] flex-col rounded-t-3xl bg-paper shadow-lifted outline-none"
+          className="fixed inset-x-0 bottom-0 z-50 flex max-h-[92dvh] flex-col rounded-t-3xl bg-paper shadow-lifted outline-none"
         >
           <div className="mx-auto mt-2 h-1.5 w-10 shrink-0 rounded-full bg-ink/20" />
           {pin && verdict && <VerdictOverlay key={pin.id} verdict={verdict} byName={verdictBy} />}
