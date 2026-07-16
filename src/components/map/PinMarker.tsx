@@ -13,7 +13,8 @@ function tilt(id: string): number {
 
 export default function PinMarker({ pin, onTap }: { pin: Pin; onTap: () => void }) {
   const cat = CATEGORIES[pin.category];
-  const thumb = pin.pin_images[0]?.thumb_path ?? pin.pin_images[0]?.storage_path;
+  const cover = pin.pin_images[0];
+  const thumb = cover?.thumb_path ?? cover?.storage_path;
   const stamped = pin.status === "stamped";
   const rejected = isRejected(pin.status);
 
@@ -38,7 +39,7 @@ export default function PinMarker({ pin, onTap }: { pin: Pin; onTap: () => void 
           <img
             src={publicImageUrl(thumb)}
             alt=""
-            className="h-full w-full object-cover"
+            className={`h-full w-full object-cover ${cover?.is_spoiler ? "blur-[5px]" : ""}`}
             loading="lazy"
             draggable={false}
           />

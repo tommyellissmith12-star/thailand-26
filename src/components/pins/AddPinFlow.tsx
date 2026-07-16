@@ -33,8 +33,8 @@ const STEPS = ["the goods", "the words", "the where"] as const;
 const MAX_PHOTOS = 6;
 
 type PhotoItem =
-  | { key: string; kind: "new"; file: File; url: string }
-  | { key: string; kind: "existing"; image: PinImage };
+  | { key: string; kind: "new"; file: File; url: string; spoiler: boolean }
+  | { key: string; kind: "existing"; image: PinImage; spoiler: boolean };
 
 function itemSrc(item: PhotoItem): string {
   return item.kind === "new"
@@ -79,7 +79,7 @@ export default function AddPinFlow() {
       setItems(
         [...editPin.pin_images]
           .sort((a, b) => a.sort_order - b.sort_order)
-          .map((image) => ({ key: image.id, kind: "existing", image })),
+          .map((image) => ({ key: image.id, kind: "existing", image, spoiler: image.is_spoiler })),
       );
       const link = editPin.pin_links[0];
       setLinkUrl(link?.url ?? "");
@@ -119,16 +119,24 @@ export default function AddPinFlow() {
   }
 
   function addFiles(files: File[]) {
+    const images = files.filter((f) => f.type.startsWith("image/"));
     setItems((current) =>
       [
         ...current,
-        ...files.map((file) => ({
+        ...images.map((file) => ({
           key: crypto.randomUUID(),
           kind: "new" as const,
           file,
           url: URL.createObjectURL(file),
+          spoiler: false,
         })),
       ].slice(0, MAX_PHOTOS),
+    );
+  }
+
+  function toggleSpoiler(key: string) {
+    setItems((current) =>
+      current.map((i) => (i.key === key ? { ...i, spoiler: !i.spoiler } : i)),
     );
   }
 
@@ -207,14 +215,14 @@ export default function AddPinFlow() {
           if (item.kind === "existing") {
             const { error: sortError } = await db
               .from("pin_images")
-              .update({ sort_order: index })
+              .update({ sort_order: index, is_spoiler: item.spoiler })
               .eq("id", item.image.id);
             if (sortError) throw sortError;
           } else {
             const uploaded = await uploadPinImage(item.file, pinId);
             const { error: imgError } = await db
               .from("pin_images")
-              .insert({ pin_id: pinId, ...uploaded, sort_order: index });
+              .insert({ pin_id: pinId, ...uploaded, sort_order: index, is_spoiler: item.spoiler });
             if (imgError) throw imgError;
           }
         }
@@ -252,7 +260,7 @@ export default function AddPinFlow() {
           const uploaded = await uploadPinImage(item.file, pinId);
           const { error: imgError } = await db
             .from("pin_images")
-            .insert({ pin_id: pinId, ...uploaded, sort_order: index });
+            .insert({ pin_id: pinId, ...uploaded, sort_order: index, is_spoiler: item.spoiler });
           if (imgError) throw imgError;
         }
 
@@ -335,10 +343,30 @@ export default function AddPinFlow() {
               />
               <button
                 onClick={() => fileInput.current?.click()}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-ink/25 bg-paper-deep/50 py-8 font-bold text-ink-soft active:scale-[0.98]"
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = "copy";
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  addFiles(Array.from(e.dataTransfer.files));
+                }}
+                disabled={items.length >= MAX_PHOTOS}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-ink/25 bg-paper-deep/50 py-8 font-bold text-ink-soft active:scale-[0.98] disabled:opacity-50"
               >
                 <Camera size={22} />
-                {items.length ? "Add more photos" : "Add photos"}
+                {items.length >= MAX_PHOTOS
+                  ? "That's the lot"
+                  : items.length
+                    ? "Add more photos (or drop them here)"
+                    : "Add photos (or drop them here)"}
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs tabular-nums ${
+                    items.length >= MAX_PHOTOS ? "bg-chili text-paper" : "bg-ink/10"
+                  }`}
+                >
+                  {items.length}/{MAX_PHOTOS}
+                </span>
               </button>
               {items.length > 0 && (
                 <>
@@ -346,16 +374,21 @@ export default function AddPinFlow() {
                     <SortableContext items={items.map((i) => i.key)} strategy={horizontalListSortingStrategy}>
                       <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto py-1">
                         {items.map((item, i) => (
-                          <SortablePhoto key={item.key} item={item} index={i} onRemove={removeItem} />
+                          <SortablePhoto
+                            key={item.key}
+                            item={item}
+                            index={i}
+                            onRemove={removeItem}
+                            onToggleSpoiler={toggleSpoiler}
+                          />
                         ))}
                       </div>
                     </SortableContext>
                   </DndContext>
-                  {items.length > 1 && (
-                    <p className="mt-1 font-hand text-lg text-ink-soft/70">
-                      hold and drag to reorder. first photo is the star ⭐
-                    </p>
-                  )}
+                  <p className="mt-1 font-hand text-lg text-ink-soft/70">
+                    {items.length > 1 ? "hold and drag to reorder. first photo is the star ⭐ " : ""}
+                    tap 🙈 to mark a photo as a spoiler
+                  </p>
                 </>
               )}
             </div>
@@ -506,10 +539,12 @@ function SortablePhoto({
   item,
   index,
   onRemove,
+  onToggleSpoiler,
 }: {
   item: PhotoItem;
   index: number;
   onRemove: (key: string) => void;
+  onToggleSpoiler: (key: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: item.key });
@@ -529,7 +564,7 @@ function SortablePhoto({
         draggable={false}
         className={`h-24 w-24 touch-none rounded-xl border-2 border-white object-cover shadow-paper ${
           isDragging ? "shadow-lifted" : ""
-        }`}
+        } ${item.spoiler ? "blur-[6px]" : ""}`}
         style={{ transform: `rotate(${index % 2 ? 2 : -2}deg)` }}
       />
       {index === 0 && (
@@ -537,6 +572,15 @@ function SortablePhoto({
           ⭐
         </span>
       )}
+      <button
+        onClick={() => onToggleSpoiler(item.key)}
+        aria-label={item.spoiler ? "Unmark spoiler" : "Mark as spoiler"}
+        className={`absolute -left-1.5 bottom-0 flex h-6 w-6 items-center justify-center rounded-full text-[13px] shadow-paper ${
+          item.spoiler ? "bg-plum text-paper" : "bg-paper"
+        }`}
+      >
+        🙈
+      </button>
       <button
         onClick={() => onRemove(item.key)}
         aria-label="Remove photo"

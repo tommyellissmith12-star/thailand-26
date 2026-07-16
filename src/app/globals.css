@@ -129,15 +129,35 @@ body {
 .font-display { font-family: var(--font-display); }
 .font-hand { font-family: var(--font-hand); }
 
-/* Washi tape strip for photo corners */
+/* Washi tape strips. Six shapes/tints so no two photos look taped the same;
+   positioned to overhang the photo edge so it reads as stuck to the page. */
 .tape {
   position: absolute;
-  width: 74px;
   height: 22px;
   background: color-mix(in srgb, var(--color-marigold) 72%, white);
   opacity: 0.85;
   box-shadow: 0 1px 2px rgba(60, 42, 10, 0.18);
-  clip-path: polygon(3% 0, 97% 6%, 100% 94%, 0 100%);
+}
+.tape-v0 { width: 74px; clip-path: polygon(3% 0, 97% 6%, 100% 94%, 0 100%); rotate: -5deg; }
+.tape-v1 {
+  width: 62px;
+  clip-path: polygon(0 10%, 50% 0, 100% 6%, 94% 100%, 46% 92%, 5% 96%);
+  rotate: 4deg;
+  background: color-mix(in srgb, var(--color-sea-deep) 36%, white);
+}
+.tape-v2 { width: 86px; clip-path: polygon(2% 6%, 98% 0, 100% 100%, 0 92%); rotate: -2deg; opacity: 0.72; }
+.tape-v3 {
+  width: 56px;
+  clip-path: polygon(8% 0, 92% 6%, 100% 50%, 94% 96%, 4% 100%, 0 46%);
+  rotate: 7deg;
+  background: color-mix(in srgb, var(--color-plum) 28%, white);
+}
+.tape-v4 { width: 78px; clip-path: polygon(0 0, 100% 10%, 95% 100%, 4% 92%); rotate: -8deg; opacity: 0.8; }
+.tape-v5 {
+  width: 70px;
+  clip-path: polygon(4% 8%, 96% 0, 100% 94%, 52% 100%, 0 96%);
+  rotate: 2deg;
+  background: color-mix(in srgb, var(--color-chili) 24%, white);
 }
 
 /* Passport stamp badge */

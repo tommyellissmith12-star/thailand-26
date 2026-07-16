@@ -16,6 +16,13 @@ import CommentThread from "./CommentThread";
 import LinkCard from "./LinkCard";
 import VerdictOverlay from "./VerdictOverlay";
 
+// Deterministic pick so a photo keeps its tape between visits
+function tapeVariant(id: string): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+  return Math.abs(h) % 6;
+}
+
 export default function PinDetailSheet() {
   const { data: pins = [] } = usePins();
   const selectedPinId = useUiStore((s) => s.selectedPinId);
@@ -28,6 +35,7 @@ export default function PinDetailSheet() {
   const router = useRouter();
   const pathname = usePathname();
   const [justStamped, setJustStamped] = useState(false);
+  const [revealed, setRevealed] = useState<Set<string>>(new Set());
 
   const pin = pins.find((p) => p.id === selectedPinId) ?? null;
   const cat = pin ? CATEGORIES[pin.category] : null;
@@ -105,23 +113,51 @@ export default function PinDetailSheet() {
 
               {/* Photo gallery */}
               {pin.pin_images.length > 0 && (
-                <div className="no-scrollbar -mx-4 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4">
-                  {pin.pin_images.map((img, i) => (
-                    <figure
-                      key={img.id}
-                      className="relative shrink-0 snap-center rounded-lg bg-white p-2 pb-6 shadow-paper"
-                      style={{ transform: `rotate(${i % 2 === 0 ? -1.2 : 1.4}deg)` }}
-                    >
-                      <span className="tape -top-2 left-1/2 -translate-x-1/2 rotate-[-4deg]" />
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={publicImageUrl(img.storage_path)}
-                        alt=""
-                        className="h-56 w-auto max-w-[78vw] rounded object-cover"
-                        loading="lazy"
-                      />
-                    </figure>
-                  ))}
+                <div className="no-scrollbar -mx-4 mt-2 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 pt-4">
+                  {pin.pin_images.map((img, i) => {
+                    const spoiled = img.is_spoiler && !revealed.has(img.id);
+                    return (
+                      <figure
+                        key={img.id}
+                        className="relative shrink-0 snap-center rounded-lg bg-white p-2 pb-6 shadow-paper"
+                        style={{ transform: `rotate(${i % 2 === 0 ? -1.2 : 1.4}deg)` }}
+                      >
+                        <button
+                          className="relative block overflow-hidden rounded"
+                          onClick={() =>
+                            img.is_spoiler &&
+                            setRevealed((r) => {
+                              const next = new Set(r);
+                              if (next.has(img.id)) next.delete(img.id);
+                              else next.add(img.id);
+                              return next;
+                            })
+                          }
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={publicImageUrl(img.storage_path)}
+                            alt=""
+                            className={`h-56 w-auto max-w-[78vw] object-cover transition-all duration-300 ${
+                              spoiled ? "blur-2xl saturate-50" : ""
+                            }`}
+                            loading="lazy"
+                          />
+                          {spoiled && (
+                            <span className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+                              <span className="text-3xl">🙈</span>
+                              <span className="font-hand rounded-full bg-paper/85 px-3 py-1 text-lg text-ink">
+                                spoiler! tap to peek
+                              </span>
+                            </span>
+                          )}
+                        </button>
+                        <span
+                          className={`tape tape-v${tapeVariant(img.id)} -top-3 left-1/2 -translate-x-1/2`}
+                        />
+                      </figure>
+                    );
+                  })}
                 </div>
               )}
 

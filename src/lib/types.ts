@@ -8,6 +8,7 @@ export interface PinImage {
   width: number | null;
   height: number | null;
   sort_order: number;
+  is_spoiler: boolean;
 }
 
 export interface PinLink {

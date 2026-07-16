@@ -42,9 +42,14 @@ export default function PinCard({
           <img
             src={cover ? publicImageUrl(cover.storage_path) : linkImage!}
             alt=""
-            className="h-44 w-full object-cover"
+            className={`h-44 w-full object-cover ${cover?.is_spoiler ? "blur-2xl saturate-50" : ""}`}
             loading="lazy"
           />
+          {cover?.is_spoiler && (
+            <span className="absolute inset-0 flex items-center justify-center gap-2 font-hand text-xl text-ink">
+              <span className="rounded-full bg-paper/85 px-3 py-1">🙈 no spoilers here</span>
+            </span>
+          )}
           {pin.status === "stamped" && (
             <span className="stamp absolute right-2 top-2 bg-paper/90 px-2 py-1 text-[10px]">
               Locked in
