@@ -17,7 +17,13 @@ const caveat = Caveat({ subsets: ["latin"], variable: "--font-caveat" });
 
 export const metadata: Metadata = {
   title: "Thailand '26",
-  description: "The family trip board. Pin it or it never happened.",
+  description: "THE OFFICIAL PLANNING APPLICATION OF THE FAM GROUP CHAT",
+  // WhatsApp share card: title + description only, deliberately no og:image
+  openGraph: {
+    title: "Thailand Round 2",
+    description: "THE OFFICIAL PLANNING APPLICATION OF THE FAM GROUP CHAT",
+    type: "website",
+  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
