@@ -23,13 +23,8 @@ export default function PinCard({
   const cover = pin.pin_images[0];
   const linkImage = pin.pin_links.find((l) => l.og_image)?.og_image;
   const rejected = isRejected(pin.status);
-  const verdictBy = memberById(pin.stamped_by)?.name;
   const verdictLabel =
-    pin.status === "torched"
-      ? `🔥 torched${verdictBy ? ` by ${verdictBy}` : ""}`
-      : pin.status === "shat"
-        ? "💩 shat on"
-        : null;
+    pin.status === "torched" ? "🔥 torched" : pin.status === "shat" ? "💩 shat on" : null;
 
   return (
     <article

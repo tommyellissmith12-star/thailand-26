@@ -23,13 +23,7 @@ const SPLATS = [
   { left: "22%", top: "66%", delay: 2750, size: "text-xl", tilt: "20deg" },
 ];
 
-export default function VerdictOverlay({
-  verdict,
-  byName,
-}: {
-  verdict: "torched" | "shat";
-  byName: string | null;
-}) {
+export default function VerdictOverlay({ verdict }: { verdict: "torched" | "shat" }) {
   return (
     // NB: no z-index here. The overlay must stay in the drawer's stacking
     // context and simply paint after the content, or mix-blend-multiply on the
@@ -46,13 +40,14 @@ export default function VerdictOverlay({
               animation: "burn-glow 2s ease-out both",
             }}
           />
-          {/* charred edges creep in (white background disappears via multiply) */}
+          {/* charred edges creep in (white background disappears via multiply);
+              negative inset bleeds the burn just past the sheet edge */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/verdicts/scorch.webp"
             alt=""
-            className="absolute inset-0 h-full w-full mix-blend-multiply"
-            style={{ objectFit: "fill", animation: "scorch-in 1.4s ease-out 0.5s both" }}
+            className="absolute mix-blend-multiply"
+            style={{ inset: "-2.5%", objectFit: "fill", animation: "scorch-in 1.4s ease-out 0.5s both" }}
           />
           {/* rising flames */}
           {FLAMES.map((f, i) => (
@@ -72,7 +67,7 @@ export default function VerdictOverlay({
             className="stamp absolute left-1/2 top-[30%] -translate-x-1/2 bg-paper/90 px-4 py-2 text-lg"
             style={{ animation: "stamp 0.45s cubic-bezier(0.2,1.6,0.4,1) 1.5s both" }}
           >
-            Torched{byName ? ` by ${byName}` : ""} 🔥
+            Torched 🔥
           </span>
         </>
       ) : (
@@ -84,14 +79,8 @@ export default function VerdictOverlay({
           >
             🚽
           </span>
-          {/* payload delivery */}
-          <span
-            className="absolute bottom-16 left-[9%] text-5xl"
-            style={{ animation: "poop-launch 1.5s cubic-bezier(0.3,0.6,0.6,1) 0.55s both" }}
-          >
-            💩
-          </span>
-          {/* the smear drags across (generated artwork, multiply hides the white) */}
+          {/* the smear drags across (generated artwork, multiply hides the white);
+              painted before the poop so the emoji stays on top of its own mess */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/verdicts/smear.webp"
@@ -99,6 +88,13 @@ export default function VerdictOverlay({
             className="absolute left-[-5%] top-[16%] w-[110%] max-w-none mix-blend-multiply"
             style={{ animation: "smear-wipe 1.1s ease-out 2.1s both" }}
           />
+          {/* payload delivery */}
+          <span
+            className="absolute bottom-16 left-[9%] text-5xl"
+            style={{ animation: "poop-launch 1.5s cubic-bezier(0.3,0.6,0.6,1) 0.55s both" }}
+          >
+            💩
+          </span>
           {/* residue */}
           {SPLATS.map((s, i) => (
             <span

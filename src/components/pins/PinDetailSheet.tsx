@@ -32,7 +32,6 @@ export default function PinDetailSheet() {
   const author = memberById(pin?.created_by);
   const stamped = pin?.status === "stamped";
   const verdict = pin && isRejected(pin.status) ? (pin.status as "torched" | "shat") : null;
-  const verdictBy = memberById(pin?.stamped_by)?.name ?? null;
 
   function setVerdict(target: PinStatus) {
     if (!pin || !member?.isApprover) return;
@@ -204,7 +203,7 @@ export default function PinDetailSheet() {
               <CommentThread pinId={pin.id} />
             </div>
           )}
-          {pin && verdict && <VerdictOverlay key={pin.id} verdict={verdict} byName={verdictBy} />}
+          {pin && verdict && <VerdictOverlay key={pin.id} verdict={verdict} />}
         </Drawer.Content>
       </Drawer.Portal>
     </Drawer.Root>
