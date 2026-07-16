@@ -8,6 +8,7 @@ export function middleware(req: NextRequest) {
   if (
     pathname.startsWith("/enter") ||
     pathname.startsWith("/api/verify-pin") ||
+    pathname.startsWith("/api/keep-alive") ||
     pathname.startsWith("/_next") ||
     pathname === "/manifest.json" ||
     pathname === "/map-style.json" ||
