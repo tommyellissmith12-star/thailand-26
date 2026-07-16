@@ -47,7 +47,17 @@ export default function VerdictOverlay({ verdict }: { verdict: "torched" | "shat
             src="/verdicts/scorch.webp"
             alt=""
             className="absolute mix-blend-multiply"
-            style={{ inset: "-2.5%", objectFit: "fill", animation: "scorch-in 1.4s ease-out 0.5s both" }}
+            style={{
+              // img is a replaced element: inset alone doesn't stretch it,
+              // so size it explicitly or it renders at its intrinsic 900px
+              left: "-2.5%",
+              top: "-2.5%",
+              width: "105%",
+              height: "105%",
+              maxWidth: "none",
+              objectFit: "fill",
+              animation: "scorch-in 1.4s ease-out 0.5s both",
+            }}
           />
           {/* rising flames */}
           {FLAMES.map((f, i) => (
