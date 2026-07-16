@@ -95,16 +95,26 @@ export function useSetPinStatus() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (args: { pinId: string; status: PinStatus; memberId: string }) => {
-      const { error } = await supabase()
+      const db = supabase();
+      // stamped_by doubles as "verdict by" for torched/shat.
+      const attributed = ["stamped", "torched", "shat"].includes(args.status);
+      const { error } = await db
         .from("pins")
         .update({
           status: args.status,
-          stamped_by: args.status === "stamped" ? args.memberId : null,
+          stamped_by: attributed ? args.memberId : null,
         })
         .eq("id", args.pinId);
       if (error) throw error;
+      // A pin that is no longer stamped has no business in the itinerary.
+      if (args.status !== "stamped") {
+        await db.from("itinerary_items").delete().eq("pin_id", args.pinId);
+      }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["pins"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["pins"] });
+      qc.invalidateQueries({ queryKey: ["itinerary"] });
+    },
   });
 }
 

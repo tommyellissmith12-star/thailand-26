@@ -1,6 +1,6 @@
 "use client";
 
-import { CATEGORIES } from "@/lib/constants";
+import { CATEGORIES, isRejected } from "@/lib/constants";
 import { publicImageUrl } from "@/lib/supabase";
 import type { Pin } from "@/lib/types";
 
@@ -15,6 +15,7 @@ export default function PinMarker({ pin, onTap }: { pin: Pin; onTap: () => void 
   const cat = CATEGORIES[pin.category];
   const thumb = pin.pin_images[0]?.thumb_path ?? pin.pin_images[0]?.storage_path;
   const stamped = pin.status === "stamped";
+  const rejected = isRejected(pin.status);
 
   return (
     <button
@@ -23,7 +24,9 @@ export default function PinMarker({ pin, onTap }: { pin: Pin; onTap: () => void 
         onTap();
       }}
       aria-label={pin.title}
-      className="group relative block cursor-pointer transition-transform active:scale-90"
+      className={`group relative block cursor-pointer transition-transform active:scale-90 ${
+        rejected ? "grayscale opacity-55" : ""
+      }`}
       style={{ transform: `rotate(${tilt(pin.id)}deg)` }}
     >
       {thumb ? (
@@ -50,9 +53,9 @@ export default function PinMarker({ pin, onTap }: { pin: Pin; onTap: () => void 
       )}
       <span
         className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full text-[11px]"
-        style={{ background: cat.color }}
+        style={{ background: rejected ? "#6b705c" : cat.color }}
       >
-        {thumb ? cat.emoji : ""}
+        {rejected ? (pin.status === "torched" ? "🔥" : "💩") : thumb ? cat.emoji : ""}
       </span>
       {stamped && (
         <span className="stamp absolute -bottom-2 -left-2 bg-paper/85 px-1 text-[8px] leading-tight">

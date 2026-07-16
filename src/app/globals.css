@@ -39,6 +39,67 @@
   }
 }
 
+/* ---- Verdict: torched ---- */
+
+@keyframes flame-rise {
+  0% { transform: translateY(20%) scale(0.5); opacity: 0; }
+  12% { opacity: 1; }
+  35% { transform: translateY(-180%) scale(1.25) rotate(-8deg); }
+  60% { transform: translateY(-380%) scale(0.95) rotate(9deg); opacity: 0.9; }
+  100% { transform: translateY(-620%) scale(0.4) rotate(-5deg); opacity: 0; }
+}
+
+@keyframes burn-glow {
+  0% { opacity: 0; }
+  25% { opacity: 0.75; }
+  70% { opacity: 0.35; }
+  100% { opacity: 0; }
+}
+
+/* Content chars: colour drains and edges darken as the flames pass */
+@keyframes char-in {
+  0% { filter: none; }
+  30% { filter: sepia(0.6) saturate(1.6) brightness(1.05); }
+  100% { filter: grayscale(0.9) brightness(0.82) sepia(0.2); }
+}
+.charred { animation: char-in 2s ease-out both; }
+
+/* ---- Verdict: shat ---- */
+
+@keyframes toilet-in {
+  0% { transform: translateY(130%) rotate(-14deg); opacity: 0; }
+  60% { transform: translateY(-8%) rotate(4deg); opacity: 1; }
+  100% { transform: translateY(0) rotate(0deg); opacity: 1; }
+}
+
+/* Launched from the toilet, arcs across, lands centre stage */
+@keyframes poop-launch {
+  0% { transform: translate(0, 0) scale(0.2) rotate(0deg); opacity: 0; }
+  8% { opacity: 1; }
+  35% { transform: translate(28vw, -46vh) scale(0.9) rotate(160deg); }
+  70% { transform: translate(34vw, -22vh) scale(1.6) rotate(330deg); }
+  84% { transform: translate(34vw, -26vh) scale(1.45) rotate(350deg); }
+  100% { transform: translate(34vw, -22vh) scale(1.55) rotate(360deg); opacity: 1; }
+}
+
+@keyframes poop-smear {
+  0% { transform: translateX(-105%) skewX(-12deg); opacity: 0; }
+  15% { opacity: 0.45; }
+  100% { transform: translateX(0) skewX(-12deg); opacity: 0.32; }
+}
+
+@keyframes splat-pop {
+  0% { transform: scale(0) rotate(-30deg); opacity: 0; }
+  70% { transform: scale(1.35) rotate(10deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes soil-in {
+  0% { filter: none; }
+  100% { filter: sepia(0.45) saturate(0.8) brightness(0.93); }
+}
+.soiled { animation: soil-in 2.6s ease-out both; }
+
 html,
 body {
   height: 100dvh;

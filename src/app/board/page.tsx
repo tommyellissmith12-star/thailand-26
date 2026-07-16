@@ -107,6 +107,8 @@ export default function BoardPage() {
                   {pin.title}
                 </span>
                 {pin.status === "stamped" && <span className="stamp px-1.5 text-[8px]">In!</span>}
+                {pin.status === "torched" && <span>🔥</span>}
+                {pin.status === "shat" && <span>💩</span>}
                 <span className="text-xs tabular-nums text-ink-soft">
                   {pin.reactions.length} ❤️
                 </span>

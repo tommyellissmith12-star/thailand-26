@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Drawer } from "vaul";
 import { MapPin, Stamp, Trash2 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
-import { CATEGORIES, memberById } from "@/lib/constants";
+import { CATEGORIES, memberById, isRejected, type PinStatus } from "@/lib/constants";
 import { useMember } from "@/lib/member";
 import { useDeletePin, usePins, useSetPinStatus } from "@/lib/queries";
 import { publicImageUrl } from "@/lib/supabase";
@@ -13,6 +13,7 @@ import Avatar from "@/components/ui/Avatar";
 import ReactionBar from "./ReactionBar";
 import CommentThread from "./CommentThread";
 import LinkCard from "./LinkCard";
+import VerdictOverlay from "./VerdictOverlay";
 
 export default function PinDetailSheet() {
   const { data: pins = [] } = usePins();
@@ -30,10 +31,13 @@ export default function PinDetailSheet() {
   const cat = pin ? CATEGORIES[pin.category] : null;
   const author = memberById(pin?.created_by);
   const stamped = pin?.status === "stamped";
+  const verdict = pin && isRejected(pin.status) ? (pin.status as "torched" | "shat") : null;
+  const verdictBy = memberById(pin?.stamped_by)?.name ?? null;
 
-  function toggleStamp() {
+  function setVerdict(target: PinStatus) {
     if (!pin || !member?.isApprover) return;
-    const next = stamped ? "idea" : "stamped";
+    // Tapping the active verdict shows mercy and restores the idea.
+    const next = pin.status === target ? "idea" : target;
     if (next === "stamped") {
       setJustStamped(true);
       setTimeout(() => setJustStamped(false), 900);
@@ -61,11 +65,16 @@ export default function PinDetailSheet() {
         <Drawer.Overlay className="fixed inset-0 z-40 bg-ink/30" />
         <Drawer.Content
           aria-describedby={undefined}
-          className="fixed inset-x-0 bottom-0 z-50 flex max-h-[92dvh] flex-col rounded-t-3xl bg-paper shadow-lifted outline-none"
+          className="relative fixed inset-x-0 bottom-0 z-50 flex max-h-[92dvh] flex-col rounded-t-3xl bg-paper shadow-lifted outline-none"
         >
           <div className="mx-auto mt-2 h-1.5 w-10 shrink-0 rounded-full bg-ink/20" />
+          {pin && verdict && <VerdictOverlay key={pin.id} verdict={verdict} byName={verdictBy} />}
           {pin && cat && (
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(env(safe-area-inset-bottom)+90px)] pt-3">
+            <div
+              className={`min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(env(safe-area-inset-bottom)+90px)] pt-3 ${
+                verdict === "torched" ? "charred" : verdict === "shat" ? "soiled" : ""
+              }`}
+            >
               {/* Title row */}
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -146,17 +155,39 @@ export default function PinDetailSheet() {
                   <MapPin size={15} /> Fly to it
                 </button>
                 {member?.isApprover && (
-                  <button
-                    onClick={toggleStamp}
-                    className={`flex items-center gap-1.5 rounded-full border-2 px-3 py-1.5 text-sm font-bold transition-transform active:scale-95 ${
-                      stamped
-                        ? "border-ink/20 text-ink-soft"
-                        : "border-chili bg-chili text-paper"
-                    }`}
-                  >
-                    <Stamp size={15} />
-                    {stamped ? "Un-stamp it" : "Stamp it. We're going"}
-                  </button>
+                  <>
+                    <button
+                      onClick={() => setVerdict("stamped")}
+                      className={`flex items-center gap-1.5 rounded-full border-2 px-3 py-1.5 text-sm font-bold transition-transform active:scale-95 ${
+                        stamped
+                          ? "border-ink/20 text-ink-soft"
+                          : "border-chili bg-chili text-paper"
+                      }`}
+                    >
+                      <Stamp size={15} />
+                      {stamped ? "Un-stamp it" : "Stamp it. We're going"}
+                    </button>
+                    <button
+                      onClick={() => setVerdict("torched")}
+                      className={`flex items-center gap-1.5 rounded-full border-2 px-3 py-1.5 text-sm font-bold transition-transform active:scale-95 ${
+                        verdict === "torched"
+                          ? "border-marigold bg-marigold/20 text-ink"
+                          : "border-marigold/70 text-ink-soft"
+                      }`}
+                    >
+                      🔥 {verdict === "torched" ? "Have mercy" : "Torch it"}
+                    </button>
+                    <button
+                      onClick={() => setVerdict("shat")}
+                      className={`flex items-center gap-1.5 rounded-full border-2 px-3 py-1.5 text-sm font-bold transition-transform active:scale-95 ${
+                        verdict === "shat"
+                          ? "border-[#7a4a1f] bg-[#7a4a1f]/15 text-[#7a4a1f]"
+                          : "border-[#7a4a1f]/60 text-ink-soft"
+                      }`}
+                    >
+                      💩 {verdict === "shat" ? "Hose it down" : "Shit on it"}
+                    </button>
+                  </>
                 )}
                 {member && (member.id === pin.created_by || member.isApprover) && (
                   <button

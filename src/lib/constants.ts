@@ -2,7 +2,11 @@ export type Category =
   | "food" | "beach" | "temple" | "island"
   | "activity" | "stay" | "town" | "other";
 
-export type PinStatus = "idea" | "shortlist" | "stamped";
+export type PinStatus = "idea" | "shortlist" | "stamped" | "torched" | "shat";
+
+// Jon & Rachel's rejection verdicts. Anything here is dead unless mercy is shown.
+export const REJECTED: PinStatus[] = ["torched", "shat"];
+export const isRejected = (s: PinStatus) => REJECTED.includes(s);
 
 export interface Member {
   id: string;
@@ -14,12 +18,12 @@ export interface Member {
 
 // Fixed family roster. Ids match supabase/seed.sql exactly.
 export const MEMBERS: Member[] = [
-  { id: "00000000-0000-4000-8000-000000000001", name: "Jon",    avatar: "🧭", color: "#3E6C9E", isApprover: true },
-  { id: "00000000-0000-4000-8000-000000000002", name: "Rachel", avatar: "🌺", color: "#C74A34", isApprover: true },
-  { id: "00000000-0000-4000-8000-000000000003", name: "Ruby",   avatar: "🐘", color: "#7E5A9B", isApprover: false },
-  { id: "00000000-0000-4000-8000-000000000004", name: "Tom",    avatar: "🛵", color: "#2A9D8F", isApprover: false },
-  { id: "00000000-0000-4000-8000-000000000005", name: "Neve",   avatar: "🥭", color: "#F2A93B", isApprover: false },
-  { id: "00000000-0000-4000-8000-000000000006", name: "Dale",   avatar: "🦎", color: "#588B4C", isApprover: false },
+  { id: "00000000-0000-4000-8000-000000000001", name: "Jon",    avatar: "🤴", color: "#3E6C9E", isApprover: true },
+  { id: "00000000-0000-4000-8000-000000000002", name: "Rachel", avatar: "👸", color: "#C74A34", isApprover: true },
+  { id: "00000000-0000-4000-8000-000000000003", name: "Ruby",   avatar: "🌼", color: "#7E5A9B", isApprover: false },
+  { id: "00000000-0000-4000-8000-000000000004", name: "Tom",    avatar: "🤠", color: "#2A9D8F", isApprover: false },
+  { id: "00000000-0000-4000-8000-000000000005", name: "Neve",   avatar: "🌺", color: "#F2A93B", isApprover: false },
+  { id: "00000000-0000-4000-8000-000000000006", name: "Dale",   avatar: "🏄‍♂️", color: "#588B4C", isApprover: false },
 ];
 
 export const memberById = (id: string | null | undefined): Member | undefined =>
@@ -40,9 +44,9 @@ export const CATEGORY_KEYS = Object.keys(CATEGORIES) as Category[];
 
 export const REACTION_EMOJIS = ["❤️", "🔥", "😍", "🤔", "💰"] as const;
 
-// Trip window: Dec 27 2026 to early Jan 2027. Adjust TRIP_END when flights are booked.
+// Trip window: Dec 27 2026 to Jan 24 2027.
 export const TRIP_START = "2026-12-27";
-export const TRIP_END = "2027-01-06";
+export const TRIP_END = "2027-01-24";
 
 export function tripDays(): string[] {
   const days: string[] = [];

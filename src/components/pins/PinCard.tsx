@@ -1,7 +1,7 @@
 "use client";
 
 import { MessageCircle } from "lucide-react";
-import { CATEGORIES, memberById } from "@/lib/constants";
+import { CATEGORIES, memberById, isRejected } from "@/lib/constants";
 import { publicImageUrl } from "@/lib/supabase";
 import { useUiStore } from "@/lib/ui-store";
 import type { Pin } from "@/lib/types";
@@ -22,6 +22,14 @@ export default function PinCard({
   const author = memberById(pin.created_by);
   const cover = pin.pin_images[0];
   const linkImage = pin.pin_links.find((l) => l.og_image)?.og_image;
+  const rejected = isRejected(pin.status);
+  const verdictBy = memberById(pin.stamped_by)?.name;
+  const verdictLabel =
+    pin.status === "torched"
+      ? `🔥 torched${verdictBy ? ` by ${verdictBy}` : ""}`
+      : pin.status === "shat"
+        ? `💩 shat on${verdictBy ? ` by ${verdictBy}` : ""}`
+        : null;
 
   return (
     <article
@@ -46,7 +54,17 @@ export default function PinCard({
               Locked in
             </span>
           )}
+          {verdictLabel && (
+            <span className="stamp absolute right-2 top-2 border-[#7a4a1f] bg-paper/90 px-2 py-1 text-[10px] text-[#7a4a1f]">
+              {verdictLabel}
+            </span>
+          )}
         </div>
+      )}
+      {rejected && !cover && !linkImage && (
+        <span className="stamp mb-2 inline-block border-[#7a4a1f] bg-paper px-2 py-1 text-[10px] text-[#7a4a1f]">
+          {verdictLabel}
+        </span>
       )}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
