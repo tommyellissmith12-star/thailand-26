@@ -68,7 +68,6 @@ export default function PinDetailSheet() {
           className="fixed inset-x-0 bottom-0 z-50 flex max-h-[92dvh] flex-col rounded-t-3xl bg-paper shadow-lifted outline-none"
         >
           <div className="mx-auto mt-2 h-1.5 w-10 shrink-0 rounded-full bg-ink/20" />
-          {pin && verdict && <VerdictOverlay key={pin.id} verdict={verdict} byName={verdictBy} />}
           {pin && cat && (
             <div
               className={`min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(env(safe-area-inset-bottom)+90px)] pt-3 ${
@@ -205,6 +204,7 @@ export default function PinDetailSheet() {
               <CommentThread pinId={pin.id} />
             </div>
           )}
+          {pin && verdict && <VerdictOverlay key={pin.id} verdict={verdict} byName={verdictBy} />}
         </Drawer.Content>
       </Drawer.Portal>
     </Drawer.Root>

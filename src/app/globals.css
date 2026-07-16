@@ -82,10 +82,17 @@
   100% { transform: translate(34vw, -22vh) scale(1.55) rotate(360deg); opacity: 1; }
 }
 
-@keyframes poop-smear {
-  0% { transform: translateX(-105%) skewX(-12deg); opacity: 0; }
-  15% { opacity: 0.45; }
-  100% { transform: translateX(0) skewX(-12deg); opacity: 0.32; }
+/* Wipe-reveal for the generated smear artwork, left to right like a drag */
+@keyframes smear-wipe {
+  0% { clip-path: inset(0 100% 0 0); opacity: 0; }
+  10% { opacity: 1; }
+  100% { clip-path: inset(0 -5% 0 0); opacity: 1; }
+}
+
+/* Generated scorch frame creeps in as the flames pass */
+@keyframes scorch-in {
+  0% { opacity: 0; transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
 @keyframes splat-pop {

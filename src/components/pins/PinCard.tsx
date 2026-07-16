@@ -28,7 +28,7 @@ export default function PinCard({
     pin.status === "torched"
       ? `🔥 torched${verdictBy ? ` by ${verdictBy}` : ""}`
       : pin.status === "shat"
-        ? `💩 shat on${verdictBy ? ` by ${verdictBy}` : ""}`
+        ? "💩 shat on"
         : null;
 
   return (

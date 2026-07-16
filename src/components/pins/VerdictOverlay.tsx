@@ -31,7 +31,10 @@ export default function VerdictOverlay({
   byName: string | null;
 }) {
   return (
-    <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden rounded-t-3xl">
+    // NB: no z-index here. The overlay must stay in the drawer's stacking
+    // context and simply paint after the content, or mix-blend-multiply on the
+    // scorch/smear artwork can't see the content underneath it.
+    <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-t-3xl">
       {verdict === "torched" ? (
         <>
           {/* heat glow */}
@@ -42,6 +45,14 @@ export default function VerdictOverlay({
                 "linear-gradient(to top, rgba(199,74,52,0.85), rgba(242,169,59,0.5) 45%, transparent 75%)",
               animation: "burn-glow 2s ease-out both",
             }}
+          />
+          {/* charred edges creep in (white background disappears via multiply) */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/verdicts/scorch.webp"
+            alt=""
+            className="absolute inset-0 h-full w-full mix-blend-multiply"
+            style={{ objectFit: "fill", animation: "scorch-in 1.4s ease-out 0.5s both" }}
           />
           {/* rising flames */}
           {FLAMES.map((f, i) => (
@@ -80,15 +91,13 @@ export default function VerdictOverlay({
           >
             💩
           </span>
-          {/* the smear */}
-          <div
-            className="absolute inset-x-0 top-[18%] h-[45%]"
-            style={{
-              background:
-                "repeating-linear-gradient(100deg, rgba(101,67,33,0.55) 0 26px, rgba(130,90,44,0.35) 26px 54px, rgba(101,67,33,0.5) 54px 88px)",
-              borderRadius: "40% 55% 50% 45% / 55% 45% 60% 40%",
-              animation: "poop-smear 1s ease-out 2.1s both",
-            }}
+          {/* the smear drags across (generated artwork, multiply hides the white) */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/verdicts/smear.webp"
+            alt=""
+            className="absolute left-[-5%] top-[16%] w-[110%] max-w-none mix-blend-multiply"
+            style={{ animation: "smear-wipe 1.1s ease-out 2.1s both" }}
           />
           {/* residue */}
           {SPLATS.map((s, i) => (
@@ -109,7 +118,7 @@ export default function VerdictOverlay({
             className="stamp absolute left-1/2 top-[32%] -translate-x-1/2 border-[#7a4a1f] bg-paper/90 px-4 py-2 text-lg text-[#7a4a1f]"
             style={{ animation: "stamp 0.45s cubic-bezier(0.2,1.6,0.4,1) 2.9s both" }}
           >
-            Shat on{byName ? ` by ${byName}` : ""} 💩
+            Shat on 💩
           </span>
         </>
       )}
